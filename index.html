@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>求职申请管理看板</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-shape bg-shape-1"></div>
+  <div class="bg-shape bg-shape-2"></div>
+
+  <header class="topbar container">
+    <div>
+      <p class="eyebrow">2026 求职季</p>
+      <h1>求职申请管理看板</h1>
+      <p class="subtitle">流程可视化 · 截止预警 · 材料归档 · 面试复盘</p>
+      <p id="apiMode" class="api-mode"></p>
+    </div>
+    <div class="topbar-actions">
+      <input id="usernameInput" class="auth-input" placeholder="用户名" />
+      <input id="passwordInput" class="auth-input" type="password" placeholder="密码" />
+      <button id="loginBtn" class="btn btn-ghost">登录/注册</button>
+      <button id="logoutBtn" class="btn btn-ghost">退出</button>
+      <span id="userBadge" class="badge user-badge">未登录</span>
+      <button id="addBtn" class="btn btn-primary">+ 新建申请</button>
+      <button id="seedBtn" class="btn btn-ghost">重置示例数据</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="metrics" class="metrics"></section>
+
+    <section class="panel controls">
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-view="kanbanView">看板</button>
+        <button class="tab" data-view="calendarView">日历</button>
+        <button class="tab" data-view="listView">列表</button>
+        <button class="tab" data-view="offerView">Offer对比</button>
+        <button class="tab" data-view="reportView">周报</button>
+      </div>
+      <div class="filters">
+        <input id="searchInput" type="text" placeholder="搜索公司 / 岗位 / 城市" />
+        <select id="priorityFilter">
+          <option value="all">全部优先级</option>
+          <option value="高">高优先级</option>
+          <option value="中">中优先级</option>
+          <option value="低">低优先级</option>
+        </select>
+        <select id="dueFilter">
+          <option value="all">全部时间</option>
+          <option value="7">7天内截止</option>
+          <option value="14">14天内截止</option>
+          <option value="overdue">已逾期</option>
+        </select>
+      </div>
+    </section>
+
+    <section id="kanbanView" class="view active">
+      <div id="kanbanBoard" class="kanban-board"></div>
+    </section>
+
+    <section id="calendarView" class="view">
+      <div class="panel calendar-toolbar">
+        <button id="prevMonth" class="btn btn-ghost">上个月</button>
+        <h3 id="calendarTitle"></h3>
+        <button id="nextMonth" class="btn btn-ghost">下个月</button>
+      </div>
+      <div id="calendarGrid" class="calendar-grid panel"></div>
+    </section>
+
+    <section id="listView" class="view panel">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>公司</th>
+              <th>岗位</th>
+              <th>城市</th>
+              <th>截止日期</th>
+              <th>优先级</th>
+              <th>状态</th>
+              <th>下一步动作</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="listBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="offerView" class="view panel">
+      <div class="panel-head">
+        <h3>Offer 决策对比</h3>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>公司</th>
+              <th>岗位</th>
+              <th>城市</th>
+              <th>月薪(元)</th>
+              <th>成长性(1-10)</th>
+              <th>业务匹配(1-10)</th>
+              <th>稳定性(1-10)</th>
+              <th>综合得分</th>
+            </tr>
+          </thead>
+          <tbody id="offerBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="reportView" class="view panel">
+      <div class="panel-head">
+        <h3>周报自动生成</h3>
+        <div class="row-actions">
+          <button id="generateReportBtn" class="btn btn-ghost">生成本周报告</button>
+          <button id="copyReportBtn" class="btn btn-primary">复制周报</button>
+          <button id="downloadReportBtn" class="btn btn-ghost">导出TXT</button>
+        </div>
+      </div>
+      <textarea id="weeklyReport" rows="16" placeholder="点击“生成本周报告”"></textarea>
+    </section>
+
+    <section class="panel reminder-panel">
+      <div class="panel-head">
+        <h3>截止提醒与风险列表</h3>
+        <span id="riskCount" class="pill"></span>
+      </div>
+      <ul id="reminderList" class="reminder-list"></ul>
+    </section>
+  </main>
+
+  <dialog id="appModal" class="modal">
+    <form id="appForm" method="dialog">
+      <div class="modal-head">
+        <h3 id="modalTitle">新建申请</h3>
+      </div>
+
+      <input type="hidden" id="appId" />
+
+      <div class="form-grid">
+        <label>公司名<input id="company" required /></label>
+        <label>岗位名<input id="role" required /></label>
+        <label>城市<input id="city" required /></label>
+        <label>渠道来源<input id="source" placeholder="官网/内推/平台" required /></label>
+        <label>截止日期<input id="deadline" type="date" required /></label>
+        <label>优先级
+          <select id="priority" required>
+            <option value="高">高</option>
+            <option value="中" selected>中</option>
+            <option value="低">低</option>
+          </select>
+        </label>
+        <label>流程状态
+          <select id="status" required></select>
+        </label>
+        <label>岗位类型
+          <select id="roleType">
+            <option value="通用" selected>通用</option>
+            <option value="产品">产品</option>
+            <option value="研发">研发</option>
+            <option value="运营">运营</option>
+          </select>
+        </label>
+        <label>月薪(元)<input id="salary" type="number" min="0" step="500" value="12000" /></label>
+        <label>成长性(1-10)<input id="growth" type="number" min="1" max="10" value="7" /></label>
+        <label>业务匹配(1-10)<input id="fit" type="number" min="1" max="10" value="7" /></label>
+        <label>稳定性(1-10)<input id="stability" type="number" min="1" max="10" value="7" /></label>
+      </div>
+
+      <label>下一步动作<textarea id="nextAction" rows="2" placeholder="例如：4月22日前完成笔试"></textarea></label>
+      <label>简历版本<input id="resume" placeholder="如：简历_产品经理_v3.pdf" /></label>
+      <label>作品集链接<input id="portfolio" placeholder="https://..." /></label>
+      <label>复盘备注<textarea id="notes" rows="3" placeholder="记录面试反馈、改进点"></textarea></label>
+
+      <menu class="modal-actions">
+        <button type="button" id="cancelBtn" class="btn btn-ghost">取消</button>
+        <button type="submit" class="btn btn-primary">保存</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>

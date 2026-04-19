@@ -1,0 +1,14 @@
+{
+  "name": "job-application-board",
+  "version": "1.0.0",
+  "description": "求职申请管理看板（前后端一体版）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "express": "^4.21.2"
+  }
+}
